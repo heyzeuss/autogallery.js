@@ -27,9 +27,8 @@ var filename,
     },
     fullscreenBackgroundVar,
     autogalleryContainerVar,
-    innerVar;
-
-
+    innerVar,
+    fileList = fileListPhp;
 
 function slideforward(curImg, firstimage) {
     //	alert(curImg.attr('id'));
@@ -54,7 +53,7 @@ function slideback(curImg, firstimage) {
 function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheight) {
     /* match http://www.timothyausten.com/paintings/autogallery/ */
     var thisDir = window.location.href.match(/.*\//)[0];
-    
+
     // Get max height available for slideshow in order to fit it above the fold
     var body = document.body,
         html = document.documentElement,
@@ -62,6 +61,7 @@ function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheig
         viewportWidth = Math.max(html.clientWidth, window.innerWidth || 0),
         viewportHeight = Math.max(html.clientHeight, window.innerHeight || 0),
         estimatedMaxheight = Math.floor((1 - docHeight / viewportHeight) * 100) + '%';
+
     /*alert(
         'section: ' + $('section').height() +
         '\nclientheight: ' + html.clientHeight +
@@ -81,7 +81,7 @@ function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheig
     maxwidth         = (typeof maxwidth         === 'undefined') ? '80%' : maxwidth;
     maxheight        = (typeof maxheight        === 'undefined') ? estimatedMaxheight : maxheight;
     // End of optional parameters
-    
+
     var imgCssInitial = {
         'position': 'relative',
         'margin': '0 auto',
@@ -96,7 +96,7 @@ function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheig
         imgCssShow = {'display': 'block' };
 
     $(galleryContainer).attr({width: '100%', height: '100%'});
-    
+
     $(function () {
         var galleryDivs =
             '<div id="fullscreenBackground"></div>' +
@@ -106,12 +106,12 @@ function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheig
         galleryDivs = $(galleryDivs);
         $(galleryContainer).append(galleryDivs);
     });
-    
+
     $(function () {
         $('#fullscreenButtonOuter').css(fullscreenButtonOuterVar);
         $('#fullscreenButton').css(fullscreenButtonVar);
     });
-    
+
     $.ajax({
         url: dir,
         success: function (data) {
@@ -125,19 +125,29 @@ function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheig
                 q6 = 'a:contains(' + 'unknown.gif' + ')';
             //include all elements whose anchor has fileextention
             //exclude back.gif and image2.gif
-            els = $(data).find(q1).not(q2).not(q3).not(q4).not(q5).not(q6);
-            els.each(function (itr) {
-                filename = this.href.replace(thisDir, ''); // if url has no file at end
-                // filename = this.href.replace(window.location.href, ''); // if url has no file at end
-                // this.host            = www.timothyausten.com
-                // this.href            = http://www.timothyausten.com/autogallery/001-mid.jpg
-                // window.location.host = www.timothyausten.com
-                // window.location.href = http://www.timothyausten.com/autogallery
+            // Check if the list of files has already been created in php.
+            // If not, then scrape the automatically created page.
+            console.log('fileList: ' + fileList);
+            if (typeof fileList === 'undefined') {
+                fileList = [];
+                els = $(data).find(q1).not(q2).not(q3).not(q4).not(q5).not(q6);
+                els.each(function (itr) {
+                    filename = this.href.replace(thisDir, ''); // if url has no file at end
+                    // filename = this.href.replace(window.location.href, ''); // if url has no file at end
+                    // this.host            = www.timothyausten.com
+                    // this.href            = http://www.timothyausten.com/autogallery/001-mid.jpg
+                    // window.location.host = www.timothyausten.com
+                    // window.location.href = http://www.timothyausten.com/autogallery
 
-                //var imgTags='<object><img src="alt_img.png" alt="altimgexample"/></object>';
-                //var imgTags='<object></object>';
+                    //var imgTags='<object><img src="alt_img.png" alt="altimgexample"/></object>';
+                    //var imgTags='<object></object>';
+                    fileList.push(filename);
+                });
+            }
+            for (i = 0; i < fileList.length; i++) {
+                var filename = fileList[i]; // if url has no file at end
                 imgElement = $(imgTags).attr({
-                    'id'   : 'img' + itr,
+                    'id'   : 'img' + i,
                     'src'  : dir + filename
                     //'data' : filename,
                     //'type' : 'image/svg+xml',
@@ -145,7 +155,7 @@ function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheig
                 imgElement.css(imgCssInitial);
                 imgElement.hide();
                 $('#autogalleryContainer').append(imgElement);
-            });
+            };
 
             // hide current image and show next one
             // if last image, go to first
@@ -161,21 +171,21 @@ function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheig
             window.onkeydown = function (evt) {
                 evt = evt || window.event; // prevent default
                 switch (evt.keyCode) {
-                case 37:
-                    // left arrow key
-                    curImg.hide();
-                    curImg = slideback(curImg, firstimage).css(imgCssShow);
-                    break;
-                case 39:
-                    // right arrow key
-                    curImg.hide();
-                curImg = slideforward(curImg, firstimage).css(imgCssShow);
-                    break;
+                    case 37:
+                        // left arrow key
+                        curImg.hide();
+                        curImg = slideback(curImg, firstimage).css(imgCssShow);
+                        break;
+                    case 39:
+                        // right arrow key
+                        curImg.hide();
+                        curImg = slideforward(curImg, firstimage).css(imgCssShow);
+                        break;
                 }
             };
         }
     });
-    
+
     // Manage fullscreen mode
     $(function () {
         fullscreenBackgroundVar = $('#fullscreenBackground');
@@ -291,6 +301,4 @@ function autogalleryfunc(dir, fileextension, galleryContainer, maxwidth, maxheig
             }
         });
     });
-
-
 }
