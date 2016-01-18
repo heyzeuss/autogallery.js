@@ -14,20 +14,11 @@ http://jsfiddle.net/8FMsH/1/
 
 var filename,
     imgTags = '<img class="inner"></img>',
-    imgElement,
+    imgEl = [],
     firstimage,
     curImg,
     topZindex,
     fullscreenIsOn = false,
-    fullscreenButtonVar = {
-        'position': 'absolute',
-        'right': '10px',
-        'top': '10px',
-        'display': 'block',
-        'padding': '4px',
-        'background-color': '#bbb'
-    },
-    fullscreenBackgroundVar,
     innerVar;
 
 function slideforward(curImg, firstimage) {
@@ -65,24 +56,88 @@ function EstimatedHeight(galleryContainer) {
         body = document.body,
         html = document.documentElement,
         gallery = $('#' + galleryContainer),
-        galleryH = gallery.height() < 0 ? 0 : gallery.height();
+        galleryH = gallery.height() < 0 ? 0 : gallery.height(),
+        bodyHeight = Math.min(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight
+        ),
+        viewportHeight = Math.max(html.clientHeight, window.innerHeight || 0);
+    
+    // Set the gallery height initially to something
+    // excessively large to avoid the problem where
+    // if body is smaller than viewport,
+    // then viewport size is returned. http://stackoverflow.com/a/14036545
+    gallery.css('height', '10000px');
+
+    
     this.galleryH = galleryH;
-    this.docHeight = Math.max(
-        body.scrollHeight,
-        body.offsetHeight,
-        html.clientHeight,
-        html.scrollHeight,
-        html.offsetHeight
-    );
+    
+    console.log('body.clientHeight: ' + body.clientHeight);
+    console.log('body.scrollHeight: ' + body.scrollHeight);
+    console.log('body.offsetHeight: ' + body.offsetHeight);
+    console.log('html.clientHeight: ' + html.clientHeight);
+    console.log('html.scrollHeight: ' + html.scrollHeight);
+    console.log('html.offsetHeight: ' + html.offsetHeight);
+
+    // ---
+    
+    // if body is smaller than viewport, then the viewport size is returned. http://stackoverflow.com/a/14036545
+    
+    (function () {
+        console.log('header, gallery, and footer');
+        console.log(document.getElementsByTagName('header')[0].scrollHeight);
+        console.log(document.getElementById('galleryId').scrollHeight);
+        if (document.getElementsByTagName('section')[0]) {
+            var sectionHeight = document.getElementsByTagName('section')[0].scrollHeight;
+            console.log(sectionHeight);
+            console.log('There is a section element');
+        } else {
+            console.log('There is no section element');
+        }
+    }());
+    
+    console.log('header + gallery + footer');
+    // broken line console.log(document.getElementById('galleryId').scrollHeight + document.getElementsByTagName('header')[0].scrollHeight + document.getElementsByTagName('section')[0].scrollHeight);
+
+    console.log('body');
+    console.log(document.body.scrollHeight);
+    console.log('body with jQuery');
+    console.log($(document).height());
+    
+    console.log('viewport: window.innerHeight & document.documentElement.clientHeight');
+    console.log(window.innerHeight);
+    console.log(document.documentElement.clientHeight);
+
+
+
+    
+    
+    
+    // Viewport dimensions:
+    // window.innerHeight
+    // document.documentElement.clientHeight
+
+    // Element dimensions
+    // .scrollHeight
+
+    // Other dimensions
+    // Gives viewport size + scrollbars
+    // .offsetHeight
+
+
+    
+    // ---
+    
+    this.docHeight = bodyHeight;
     this.viewportWidth = Math.max(html.clientWidth, window.innerWidth || 0);
-    this.viewportHeight = Math.max(html.clientHeight, window.innerHeight || 0);
+    this.viewportHeight = viewportHeight;
     //  this.estimatedMaxheight = (1 + (galleryH - this.docHeight) / this.viewportHeight).round(2);
-    this.estimatedMaxheight = (1 - (this.docHeight - galleryH) / this.viewportHeight).round(2);
+    this.estimatedMaxheight = (1 - (bodyHeight - galleryH) / viewportHeight).round(2);
     /*this.minH = 0.2;
     if (this.estimatedMaxheight < this.minH) {
         this.estimatedMaxheight = this.minH;
     }*/
-
+    
     this.resize = gallery.css({'height': this.estimatedMaxheight * 100 + '%'});
 
     // Make some test text
@@ -112,7 +167,6 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
     /* match http://www.timothyausten.com/paintings/autogallery/ */
     var thisDir = window.location.href.match(/.*\//)[0],
         imgCssInitial,
-        imgCssShow,
         dimensions,
         docHeight,
         viewportHeight,
@@ -151,11 +205,28 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
     fileextension    = (typeof fileextension    === 'undefined') ? '.jpg'    : fileextension;
     galleryContainer = (typeof galleryContainer === 'undefined') ? 'galleryContainer' : galleryContainer;
 
+    // Test if dimensions object is working
+    (function () {
+        console.log('hello world');
+        var sizes = new EstimatedHeight(galleryContainer);
+        console.log('hello world');
+        console.log('sizes: ' + sizes);
+        console.log(sizes);
+    }());
+
     dimensions = new EstimatedHeight(galleryContainer);
     docHeight = dimensions.docHeight;
     viewportHeight = dimensions.viewportHeight;
     estimatedMaxheight = dimensions.estimatedMaxheight;
     console.log('docHeight: ' + docHeight);
+    console.log('estimatedmaxheight: ' + estimatedMaxheight);
+
+    // Test if fileList is provided by php
+    (function () {
+        console.log('Hello World');
+        var fileListFromAjax = fileList ? false : true;
+        console.log('fileListFromAjax: ' + fileListFromAjax);
+    }());
 
     maxwidth         = (typeof maxwidth         === 'undefined') ? 0.8 : maxwidth;
     maxheight        = (typeof maxheight        === 'undefined') ? estimatedMaxheight : maxheight;
@@ -168,17 +239,12 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
         'padding': '0',
         'max-height': '100%',
         'max-width': maxwidth * 100 + '%',
-        'top': 0,
-        'left': 0,
         'border': '2px solid #4d4d4d'
     };
-    imgCssShow = {'display': 'block'};
 
     console.log('beginning max height: ' + maxheight);
     
     $(function () {
-        var galleryDivs;
-
         $('html, body').css({
             'width': '100%',
             'height': '100%',
@@ -186,231 +252,269 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
             'padding': '0',
             'overflow': 'visible'
         });
+        
         $('#' + galleryContainer).css({
             'width': '100%',
+            'height': dimensions.estimatedMaxheight * 100 + '%',
             'margin': '0 auto',
             'padding': '0'
         });
+        
+        console.log('dimensions.estimatedMaxheight: ' + dimensions.estimatedMaxheight);
     
-        galleryDivs =
+        $('#' + galleryContainer).append($(
             '<div id="fullscreenBackground"></div>' +
-            '<div id="fullscreenButton">Fullscreen</div>';
-        galleryDivs = $(galleryDivs);
-        $('#' + galleryContainer).append(galleryDivs);
+            '<div id="fullscreenButton">Fullscreen</div>'
+        ));
 
-        $('#fullscreenButton').css(fullscreenButtonVar);
+        $('#fullscreenButton').css({
+            'position': 'absolute',
+            'right': '10px',
+            'top': '10px',
+            'display': 'block',
+            'padding': '4px',
+            'background-color': '#bbb'
+        });
     });
 
-    $.ajax({
-        url: dir,
-        success: function (data) {
-            //List all jpg file names in the page
-            var i, j,
-                els,
-                q1 = 'a:contains(' + fileextension + ')',
-                yahooHostingGifs = ['image.gif', 'back.gif', 'text.gif', 'folder.gif', 'unknown.gif'];
-            //include all elements whose anchor has fileextention
-            //exclude back.gif and image2.gif
-            // Check if the list of files has already been created in php.
-            // If not, then scrape the automatically created page.
-            if (!fileList) {
-                fileList = [];
-                els = $(data).find(q1);
-                els.each(function (itr) {
-                    filename = this.href.replace(thisDir, ''); // if url has no file at end
-                    // filename = this.href.replace(window.location.href, ''); // if url has no file at end
-                    // this.host            = www.timothyausten.com
-                    // this.href            = http://www.timothyausten.com/autogallery/001-mid.jpg
-                    // window.location.host = www.timothyausten.com
-                    // window.location.href = http://www.timothyausten.com/autogallery
-
-                    //var imgTags='<object><img src="alt_img.png" alt="altimgexample"/></object>';
-                    //var imgTags='<object></object>';
-                    fileList.push(filename);
-                });
-                // console.log(fileList ? 'fileList: ' + fileList : 'fileList: none');
-            }
-            
-            // .contains() not supported in chrome,
-            // use polyfill instead.
-            if (!String.prototype.contains) {
-                String.prototype.contains = function () {
-                    return String.prototype.indexOf.apply(this, arguments) !== -1;
-                };
-            }
-            
-            for (i = 0; i < fileList.length; i++) {
-                // Get some unnecessary files created by yahoo hosting out of the list
-                for (j = 0; j < yahooHostingGifs.length; j++) {
-                    if (fileList[i].contains(yahooHostingGifs[j])) {
-                        fileList.splice(i, 1);
-                    }
-                }
-                // Include only files with right file extension
-                if (!fileList[i].contains(fileextension)) {
-                    fileList.splice(i, 1);
-                }
-                // If file name is a blank string
-                if (fileList[i] === thisDir) {
-                    fileList.splice(i, 1);
-                }
-                var filename = fileList[i]; // if url has no file at end
-                imgElement = $(imgTags).attr({
-                    'id'   : 'img' + i,
-                    'src'  : dir + filename
-                    //'data' : filename,
-                    //'type' : 'image/svg+xml',
-                });
-                imgElement.css(imgCssInitial);
-                imgElement.hide();
-                $('#' + galleryContainer).append(imgElement);
-            }
-
-            // hide current image and show next one
-            // if last image, go to first
-            // yahoo hosting services adds an extra image to the top of the list,
-            // so the first image is really the second
-            firstimage = $('.inner:first');
-            curImg = firstimage;
-            curImg.css('display', 'block');
-            $('.inner').click(function (event) {
-                curImg.hide();
-                curImg = slideforward(curImg, firstimage).css(imgCssShow);
-            });
-            window.onkeydown = function (evt) {
-                evt = evt || window.event; // prevent default
-                switch (evt.keyCode) {
-                    case 37:
-                        // left arrow key
-                        curImg.hide();
-                        curImg = slideback(curImg, firstimage).css(imgCssShow);
-                        break;
-                    case 39:
-                        // right arrow key
-                        curImg.hide();
-                        curImg = slideforward(curImg, firstimage).css(imgCssShow);
-                        break;
-                }
+    function fileListTasks(fileList) {
+        var i, j,
+            yahooHostingGifs = ['image.gif', 'back.gif', 'text.gif', 'folder.gif', 'unknown.gif'];
+        
+        // .contains() not supported in chrome,
+        // use polyfill instead.
+        if (!String.prototype.contains) {
+            String.prototype.contains = function () {
+                return String.prototype.indexOf.apply(this, arguments) !== -1;
             };
+        }
 
-            // bookmark
-            setTimeout(function() {
-                dimensions = new EstimatedHeight(galleryContainer);
-                dimensions.resize;
-            }, 1000);
-        }    
-    });
-
-    // Manage fullscreen mode
-    
-    function fullscreenOn() {
-        $(function () {
-            fullscreenBackgroundVar = $('#fullscreenBackground');
-            innerVar = $('.inner');
-            fullscreenBackgroundVar.css({
-                'background': '#000',
-                'filter': 'alpha(opacity=80)', /* IE */
-                '-moz-opacity': 0.8, /* Mozilla */
-                'opacity': 0.8, /* CSS3 */
-                'position': 'absolute',
-                'top': '0px',
-                'left': '0px',
-                'height': '100%',
-                'width': '100%'
-            });
-            innerVar.css({
-                'position': 'absolute',
-                'max-width': '100%',
-                'max-height': '100%',
-                'border': '0'
-            });
-            function fsReposition() {
-                // center image vertically and horizontally
-                innerVar.each(function () {
-                    $(this).css('top', ($(window).height() - $(this).height()) / 2);
-                    $(this).css('left', ($(window).width() - $(this).width()) / 2);
-                });
+        // Exclude some things from file list
+        for (i = 0; i < fileList.length; i++) {
+            // Get some unnecessary files created by yahoo hosting out of the list
+            for (j = 0; j < yahooHostingGifs.length; j++) {
+                if (fileList[i].contains(yahooHostingGifs[j])) {
+                    fileList.splice(i, 1);
+                }
             }
+            // Include only files with right file extension
+            if (!fileList[i].contains(fileextension)) {
+                fileList.splice(i, 1);
+            }
+            // If file name is an empty string
+            if (fileList[i] === thisDir) {
+                fileList.splice(i, 1);
+            }
+        }
+
+        
+        
+        // Create image elements from file list
+        function makeImg(i) {
+            imgEl[i] = $(imgTags).attr({
+                'id'   : 'img' + i,
+                'src'  : dir + fileList[i]
+                //'data' : fileList[i],
+                //'type' : 'image/svg+xml',
+            });
+            imgEl[i].hide();
+            imgEl[i].onload = function () {
+                imgEl[i].css(imgCssInitial);
+            };
+            $('#' + galleryContainer).append(imgEl[i]);
+        }
+        
+        for (i = 0; i < fileList.length; i++) {
+            makeImg(i);
+        }
+        
+        // For some reason the first image gets aligned left.
+        // This seems to help.
+        $('#img0').css({'margin': '0 auto'});
+        
+
+        // hide current image and show next one
+        // if last image, go to first
+        // yahoo hosting services adds an extra image to the top of the list,
+        // so the first image is really the second
+        firstimage = $('.inner:first');
+        curImg = firstimage;
+        curImg.css('display', 'block');
+        $('.inner').click(function (event) {
+            curImg.hide();
+            curImg = slideforward(curImg, firstimage).show();
+        });
+        window.onkeydown = function (evt) {
+            evt = evt || window.event; // prevent default
+            switch (evt.keyCode) {
+                case 37:
+                    // left arrow key
+                    curImg.hide();
+                    curImg = slideback(curImg, firstimage).show();
+                    break;
+                case 39:
+                    // right arrow key
+                    curImg.hide();
+                    curImg = slideforward(curImg, firstimage).show();
+                    break;
+            }
+        };
+
+        // Manage fullscreen mode
+
+        function fullscreenOn() {
             $(function () {
-                fsReposition();
-                // Detect whether device supports orientation change event, otherwise fall back to
-                // the resize event.
-                var supportsOrientationChange = 'onorientationchange' in window,
-                    orientationEvent = supportsOrientationChange ? 'orientationchange' : 'resize';
-                window.addEventListener(orientationEvent, fsReposition(), false);
-            });
-            (function () {
-                var el = document.documentElement;
-                var requestFS =
-                    el.requestFullScreen ||
-                    el.webkitRequestFullScreen ||
-                    el.mozRequestFullScreen ||
-                    el.msRequestFullscreen;
-                requestFS.call(el);
-            }());
-            $('#fullscreenButton').hide();
-            fullscreenIsOn = true;
-        });
-    }
-    function fullscreenOff() {
-        $(function () {
-            fullscreenBackgroundVar = $('#fullscreenBackground');
-            innerVar = $('.inner');
-            fullscreenBackgroundVar.css({
-                'filter': 'alpha(opacity=0)', /* IE */
-                '-moz-opacity': 0, /* Mozilla */
-                'opacity': 0 /* CSS3 */
-            });
-            innerVar.css(imgCssInitial);
-            $('#fullscreenButton').css({'display': 'block'});
-            fullscreenIsOn = false;
-        });
-    }
-
-    $(function () {
-        $('#fullscreenButton').click(function () {
-            if (fullscreenIsOn) {
-                fullscreenOff();
-            } else {
-                fullscreenOn();
-            }
-        });
-        $(window).resize(function () {
-            innerVar = $('.inner');
-            if (fullscreenIsOn) {
-                // center image vertically and horizontally
-                innerVar.each(function () {
-                    $(this).css('top', ($(window).height() - $(this).height()) / 2);
-                    $(this).css('left', ($(window).width() - $(this).width()) / 2);
+                var fullscreenBackgroundEl = $('#fullscreenBackground'),
+                    innerVar = $('.inner');
+                fullscreenBackgroundEl.css({
+                    'background': '#000',
+                    'filter': 'alpha(opacity=80)',
+                    'opacity': 0.8,
+                    'display': 'block',
+                    'position': 'absolute',
+                    'top': '0px',
+                    'left': '0px',
+                    'height': '100%',
+                    'width': '100%'
                 });
-            } else {
-                // bookmark
-                // resize gallery
-
+                innerVar.css({
+                    'position': 'absolute',
+                    'max-width': '100%',
+                    'max-height': '100%',
+                    'border': '0'
+                });
+                function fsReposition() {
+                    // center image vertically and horizontally
+                    innerVar.each(function () {
+                        $(this).css('top', ($(window).height() - $(this).height()) / 2);
+                        $(this).css('left', ($(window).width() - $(this).width()) / 2);
+                    });
+                }
+                $(function () {
+                    fsReposition();
+                    // Detect whether device supports orientation change event, otherwise fall back to
+                    // the resize event.
+                    var supportsOrientationChange = 'onorientationchange' in window,
+                        orientationEvent = supportsOrientationChange ? 'orientationchange' : 'resize';
+                    window.addEventListener(orientationEvent, fsReposition(), false);
+                });
+                (function () {
+                    var el = document.documentElement;
+                    var requestFS =
+                        el.requestFullScreen ||
+                        el.webkitRequestFullScreen ||
+                        el.mozRequestFullScreen ||
+                        el.msRequestFullscreen;
+                    requestFS.call(el);
+                }());
+                $('#fullscreenButton').hide();
+                fullscreenIsOn = true;
+            });
+        }
+        
+        function fullscreenOff() {
+            $(function () {
+                $('#fullscreenBackground').css({ 'display': 'none' });
+                $('.inner').css({
+                    'position': 'relative',
+                    'margin': '0 auto',
+                    'top': 0,
+                    'left': 0,
+                    'max-width': maxwidth * 100 + '%',
+                    'border': '2px solid #4d4d4d'
+                });
+                
                 dimensions = new EstimatedHeight(galleryContainer);
                 dimensions.resize;
-            }
-        });
-        // If esc of f11
-        $(document).keyup(function (e) {
-            if (e.keyCode === 27 || e.keyCode === 122) {
-                fullscreenOff();
-            }
-        });
-    });
-
-    // Make a test rectangle
-    $(function () {
-        var testRectStr = '<div id="testrectangle">',
-            testRect = $(testRectStr).css({
-                'position': 'absolute',
-                'margin': '0 auto',
-                'top': $('header').height() + 'px',
-                'width': '80' + '%',
-                'height': maxheight * 100 + '%',
-                'border-style': 'solid',
-                'border-color': 'red'
+                
+                $('#fullscreenButton').css({'display': 'block'});
+                fullscreenIsOn = false;
+                // bookmark
             });
-        // $('header').append(testRect);
-    });
+        }
+                            
+        $(function () {
+            $('#fullscreenButton').click(function () {
+                if (fullscreenIsOn) {
+                    fullscreenOff();
+                } else {
+                    fullscreenOn();
+                }
+            });
+            $(window).resize(function () {
+                var innerVar = $('.inner');
+                if (fullscreenIsOn) {
+                    // center image vertically and horizontally
+                    innerVar.each(function () {
+                        $(this).css('top', ($(window).height() - $(this).height()) / 2);
+                        $(this).css('left', ($(window).width() - $(this).width()) / 2);
+                    });
+                } else {
+                    // resize gallery
+
+                    dimensions = new EstimatedHeight(galleryContainer);
+                    dimensions.resize;
+                }
+            });
+            // If esc of f11
+            $(document).keyup(function (e) {
+                if (e.keyCode === 27 || e.keyCode === 122) {
+                    fullscreenOff();
+                }
+            });
+        });
+
+        // Make a test rectangle
+        $(function () {
+            var testRectStr = '<div id="testrectangle">',
+                testRect = $(testRectStr).css({
+                    'position': 'absolute',
+                    'margin': '0 auto',
+                    'top': $('header').height() + 'px',
+                    'width': '80' + '%',
+                    'height': maxheight * 100 + '%',
+                    'border-style': 'solid',
+                    'border-color': 'red'
+                });
+            // $('header').append(testRect);
+        });
+    }
+    
+    function fileListAjax(data) {
+        //List all jpg file names in the page
+        //include all elements whose anchor has fileextention
+        // Check if the list of files has already been created in php.
+        // If not, then scrape the automatically created page.
+
+        var q1 = 'a:contains(' + fileextension + ')',
+            fileList = [],
+            els = $(data).find(q1);
+        els.each(function (itr) {
+            filename = this.href.replace(thisDir, ''); // if url has no file at end
+            // filename = this.href.replace(window.location.href, ''); // if url has no file at end
+            // this.host            = www.timothyausten.com
+            // this.href            = http://www.timothyausten.com/autogallery/001-mid.jpg
+            // window.location.host = www.timothyausten.com
+            // window.location.href = http://www.timothyausten.com/autogallery
+
+            //var imgTags='<object><img src="alt_img.png" alt="altimgexample"/></object>';
+            //var imgTags='<object></object>';
+            fileList.push(filename);
+        });
+        fileListTasks(fileList);
+    }
+
+    // If fileList not already provided,
+    // then get it with Ajax
+    if (!fileList) {
+        $.ajax({
+            url: dir,
+            success: function (data) {
+                fileListAjax(data);
+            }
+        });
+    } else {
+        fileListTasks(fileList);
+    }
 }
+
