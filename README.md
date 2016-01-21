@@ -11,12 +11,12 @@ Include liabrary in page in `script` tag, usually at end of body with other libr
 ### With arguments
 
 It accepts arguments for:
- * List of files (Default: See note on list of files)
+ * List of files (Default: See note)
  * Directory of the files (Default: Home directory)
  * File extension of files to include (Default: '.jpg')
  * Slide show container ID (Default: 'galleryId')
  * Slide show container max width (Default: '.0.8')
- * Slide show container max height (Default: whatever empty height remaining)
+ * Slide show container max height (Default: See note)
 
 ```javascript
   var fileList = ['cat.jpg', 'dog.jpg', 'bird.jpg', 'rabbit.jpg'],
@@ -48,3 +48,7 @@ Autogallery can use AJAX to create a list of files, based on the contents of a b
 ### Slide show navigation
 
 Mouse clicks and screen taps advance the slide show. Arrow keys are for previous and next.
+
+### Slide show container max height
+
+By default, this library attempts to fit the container "above the fold" so that the whole body of the page fits in the window. It does this by first measuring the height of the page without the container to find the amount of room left for it. This behavior avoids the need for the user to scroll and makes a nicer presentation.
