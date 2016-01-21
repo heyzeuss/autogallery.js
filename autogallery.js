@@ -8,8 +8,10 @@ http://jsfiddle.net/8FMsH/1/
 
 Tasks:
 
-Make file extension argument accept a JSON list, for example:
+Make file extension argument accept JSON list, for example:
 ['.jpg','.png','.gif']
+
+If page too big to fit gallery above fold, then set max height to window height. Then user can still scroll down and fit slide show in window.
 
 */
 /*global $,console*/
