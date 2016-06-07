@@ -8,10 +8,8 @@ http://jsfiddle.net/8FMsH/1/
 
 Tasks:
 
-Make file extension argument accept JSON list, for example:
+Make file extension argument accept a JSON list, for example:
 ['.jpg','.png','.gif']
-
-If page too big to fit gallery above fold, then set max height to window height. Then user can still scroll down and fit slide show in window.
 
 */
 /*global $,console*/
@@ -241,7 +239,7 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
         
         $('#' + galleryContainer).prepend($(
             '<div id="fullscreenBackground"></div>' +
-            '<div id="fullscreenButton">Fullscreen</div>'
+            '<div id="fullscreenButton">[ ]</div>'
         ));
 
         $('#fullscreenButton').css({
@@ -402,6 +400,20 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
                 dimensions = new EstimatedHeight(galleryContainer);
                 dimensions.resize;
                 
+                // Exit fullscreen
+                function exitFullscreen() {
+                    if(document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if(document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if(document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                }
+
+                // Exit fullscreen for browsers that support it!
+                exitFullscreen();
+
                 $('#fullscreenButton').html('[ ]');
                 fullscreenIsOn = false;
                 // bookmark
