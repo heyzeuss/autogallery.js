@@ -8,15 +8,15 @@ http://jsfiddle.net/8FMsH/1/
 
 Tasks:
 
-Make file extension argument accept a JSON list, for example:
+Make file extension argument accept an array or a JSON list, for example:
 ['.jpg','.png','.gif']
-
 */
+
 /*global $,console*/
 /*jslint plusplus: true, white: true, vars: true*/
+
 //"true: white" removes indentation requirements. this is an issue with "case"
 //"vars: true" removes requirement for only one var statment per function
-// version 0.7
 
 var fullscreenIsOn = false;
 
@@ -138,10 +138,10 @@ function EstimatedHeight(galleryContainer) {
             document.documentElement.clientHeight, window.innerHeight || 0
         );
     
-    // Set the gallery height initially to something
-    // excessively large to avoid the problem where
-    // if body is smaller than viewport,
-    // then viewport size is returned. http://stackoverflow.com/a/14036545
+    /* Set the gallery height initially to something
+       excessively large to avoid the problem where
+       if body is smaller than viewport,
+       then viewport size is returned. http://stackoverflow.com/a/14036545 */
     gallery.css('height', '10000px');
 
     
@@ -200,6 +200,111 @@ function EstimatedHeight(galleryContainer) {
     document.body.style.height = '100%';
 }
 
+function navarrows(galleryContainer) {
+    'use strict';
+    var tapDataURI, navrightOuter, navrightInner, navrightImg, arrowkeys, $arrowkeys;
+        
+    tapDataURI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAvUlEQVR4AdXNsTlgQQCF0dldAAA6kAtBAQANQAUakAAAQC9aAKgAoIAFEeDIDOBN6sT3/274BRSbcu7JmUlFKfM90W5mYgqHGuVodoTxrOAcjVbcWdSCk6zgCX894sFfPCY8hACEkPIw9SEYywqKbMfApoKQRWEMFIYUMUgGGNGWGkS7ulKDaF9PahCNhs/UG9KhNgaR9c/zCheAU5+thc8MePKdwRAlJW0hSkrqQpSQ3MsJ39PnRsSj2fDqBUG9Ze8jHroQAAAAAElFTkSuQmCC';
+    
+function appendarrowkeys() {
+    // Make a D-pad out of text and div boxes
+    var $arrowkeysHTML, $arrowkeys, $visible, $invisible, visiblecss = {},
+        invisiblecss = {};
+
+    $arrowkeysHTML = $(
+        '<div class="arrowkeys">' +
+            '<div class="invisible">&nbsp;</div>' +
+            '<div class="visible">&#x02C4;</div>' +
+            '<div class="invisible">&nbsp;</div></br>' +
+            '<div class="visible"><</div>' +
+            '<div class="visible">&#x02C5;</div>' +
+            '<div class="visible">></div>' +
+        '</div>'
+    );
+    $(navrightInner).append($arrowkeysHTML);
+
+    // Individual visible D-pad keys
+    $visible = $('.visible');
+    visiblecss = {
+        fontWeight: 800,
+        color: 'white',
+        border: '1px solid white',
+        margin: '2px 2px 0 0',
+        padding: '4px',
+        height: '1em',
+        width: '1em',
+        display: 'inline-block',
+        borderRadius: '4px'
+    };
+    $visible.css(visiblecss);
+
+
+    // Individual invisible D-pad keys to fix spacing
+    $invisible = $('.invisible');
+    invisiblecss = {
+        borderColor: 'rgba(0, 0, 0, 0)'
+    };
+    $invisible.css(visiblecss).css(invisiblecss);
+};
+    
+    galleryContainer = $('#' + galleryContainer);
+    navrightOuter = $('<div></div>', {'class': 'navrightOuter'});
+    navrightInner = $('<div></div>', {'class': 'navrightInner'});
+    navrightImg = $('<img></img>', {'src': tapDataURI});
+
+    navrightOuter.css({
+        display: 'table',
+        position: 'absolute',
+        height: '70%',
+        width: '100%',
+        background: 'rgba(255, 255, 255, 0)',
+        zIndex: 9999,
+        pointerEvents: 'none'
+    });
+    
+    navrightInner.css({
+        display: 'table-cell',
+        verticalAlign: 'middle',
+        textAlign: 'center',
+        pointerEvents: 'none'
+    });
+    
+    navrightImg.width('4em').css({
+        border: 0,
+        pointerEvents: 'none',
+     /* imageRendering: 'optimizeSpeed',                Stop smoothing
+        imageRendering: '-moz-crisp-edges',             Firefox
+        imageRendering: '-o-crisp-edges',               Opera
+        imageRendering: '-webkit-optimize-contrast',    Chrome
+        imageRendering: 'optimize-contrast',            CSS3 Proposed */
+        imageRendering: 'pixelated',                    /* Chrome */
+        '-ms-interpolation-mode': 'nearest-neighbor'    /* IE8+  */
+    });
+
+    galleryContainer.prepend(navrightOuter);
+    navrightOuter.append(navrightInner);
+    navrightInner.append(navrightImg);
+    appendarrowkeys();
+    
+    (function (){
+        'use strict';
+        var tapIndicator;
+        navrightOuter.css({opacity: 0});
+        tapIndicator = function(recursion) {
+            var el = navrightOuter;
+            if (recursion > 0) {
+                el.animate({opacity: 0}, 800); // stays at zero for a moment before starting
+                el.animate({opacity: 0.8}, 0); // appears suddenly
+                el.animate({opacity: 0}, 1000, tapIndicator); // fades out
+                tapIndicator(recursion - 1);
+            } else {
+                return recursion;
+            }
+        };
+        tapIndicator(2);
+    }());
+}
+
 function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidth, maxheight) {
     'use strict';
     /* match http://www.timothyausten.com/paintings/autogallery/ */
@@ -222,6 +327,7 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
     // End of optional parameters
     
     $(function () {
+        // Add fullscreen background and fullscreen button and nav arrows
         $('html, body').css({
             'width': '100%',
             'height': '100%',
@@ -237,6 +343,8 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
             'padding': '0'
         });
         
+        navarrows(galleryContainer);
+        
         $('#' + galleryContainer).prepend($(
             '<div id="fullscreenBackground"></div>' +
             '<div id="fullscreenButton">[ ]</div>'
@@ -250,6 +358,7 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
             'padding': '4px',
             'background-color': '#bbb'
         });
+        
     });
 
     function fileListTasks(fileList) {
