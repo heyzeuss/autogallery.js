@@ -16,7 +16,7 @@ Make file extension argument accept an array or a JSON list, for example:
 /*jslint plusplus: true, white: true, vars: true*/
 
 //"true: white" removes indentation requirements. this is an issue with "case"
-//"vars: true" removes requirement for only one var statment per function
+//"vars: true" removes requirement for only one var statement per function
 
 var fullscreenIsOn = false;
 
@@ -382,9 +382,10 @@ function autogalleryfunc(fileList, dir, fileextension, galleryContainer, maxwidt
                 fileList.splice(i, 1);
             }
         }
+		
+		// Sort list alphabetically
+		fileList.sort();
 
-        
-        
         // Create image elements from file list
         function makeImg(i) {
             var imgEl = [],
